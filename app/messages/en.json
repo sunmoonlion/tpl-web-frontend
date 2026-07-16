@@ -1,4 +1,10 @@
 {
+  "meta": {
+    "title": "SunmoonAI Web",
+    "description": "A production-oriented Next.js frontend paired with a dedicated Nest Web Backend.",
+    "loginTitle": "Sign in",
+    "workspaceTitle": "Workspace"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Something went wrong",
@@ -9,6 +15,17 @@
     "delete": "Delete",
     "edit": "Edit",
     "back": "Back"
+  },
+  "public": {
+    "title": "A dependable foundation for product web applications",
+    "description": "Public content, authenticated workspaces, API access and live interactions use explicit rendering, security and ownership boundaries.",
+    "login": "Sign in",
+    "workspace": "Open workspace"
+  },
+  "errors": {
+    "notFoundTitle": "Page not found",
+    "notFoundDescription": "The requested page does not exist or is no longer available.",
+    "returnHome": "Return home"
   },
   "auth": {
     "login": "Login",

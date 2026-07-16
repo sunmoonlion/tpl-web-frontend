@@ -58,10 +58,16 @@ ENV HTTP_PROXY=${HTTP_PROXY} \
     no_proxy=${no_proxy}
 
 # NEXT_PUBLIC_* 构建时静态嵌入 bundle，CI 通过 --build-arg 注入
-ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_API_URL=/api
 ARG NEXT_PUBLIC_APP_NAME=tpl
+ARG APP_ORIGIN=http://localhost:3000
+ARG WEB_BACKEND_INTERNAL_URL=http://127.0.0.1:8000
+ARG DEPLOYMENT_ID=local-build
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL} \
-    NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME}
+    NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME} \
+    APP_ORIGIN=${APP_ORIGIN} \
+    WEB_BACKEND_INTERNAL_URL=${WEB_BACKEND_INTERNAL_URL} \
+    DEPLOYMENT_ID=${DEPLOYMENT_ID}
 
 # 使用 Alpine 构建，pnpm 会按 musl 平台安装 Next/SWC/sharp 的可选依赖。
 # 这里不安装编译工具，避免把 build-only 系统依赖引入镜像层。
@@ -89,7 +95,8 @@ ENV CYPRESS_INSTALL_BINARY=0 \
 # 若在此处设置 NODE_ENV=development，React 会使用开发模式构建，
 # 导致 /_global-error 预渲染时 useContext 报错
 # CI=true：pnpm 在无 TTY 的 Docker 环境中需要此变量才能正常执行
-ENV CI=true
+ENV CI=true \
+    NEXT_TELEMETRY_DISABLED=1
 
 # 构建上下文为子模块根目录；源码在 app/ 子目录
 COPY app/ /frontend
@@ -107,12 +114,16 @@ CMD ["pnpm", "dev"]
 
 FROM build AS run-start
 ENV NODE_ENV=production APP_ENV=production
-ENTRYPOINT ["pnpm"]
-CMD ["start"]
+RUN pnpm prepare:standalone
+ENTRYPOINT ["node"]
+CMD [".next/standalone/server.js"]
 
 # 使用独立运行阶段，只带 Node Alpine 基础镜像和 Next standalone 产物。
 # 不要 FROM build，否则会把 pnpm store、node_modules、构建缓存和编译依赖一起带进最终镜像。
 FROM ${REGISTRY}/node:${NODE_VERSION}-alpine AS run-minimal
+
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
 
 # ============================================================================
 # 代理配置（可选，与 build 阶段相同）
@@ -134,14 +145,16 @@ ENV HTTP_PROXY=${HTTP_PROXY} \
 WORKDIR /app
 ENV NODE_ENV=production \
     APP_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
     HOSTNAME=0.0.0.0 \
     PORT=3000
 
 # Next.js standalone：需 next.config 中 output: 'standalone'
-COPY --from=build /frontend/public ./public
-COPY --from=build /frontend/.next/standalone ./
-COPY --from=build /frontend/.next/static ./.next/static
+COPY --from=build --chown=nextjs:nodejs /frontend/public ./public
+COPY --from=build --chown=nextjs:nodejs /frontend/.next/standalone ./
+COPY --from=build --chown=nextjs:nodejs /frontend/.next/static ./.next/static
 
 EXPOSE 3000
+USER nextjs
 ENTRYPOINT ["node"]
 CMD ["server.js"]

@@ -1,4 +1,10 @@
 {
+  "meta": {
+    "title": "SunmoonAI Web",
+    "description": "与专属 Nest Web Backend 配对的生产级 Next.js 前端底座。",
+    "loginTitle": "登录",
+    "workspaceTitle": "工作区"
+  },
   "common": {
     "loading": "加载中...",
     "error": "出错了",
@@ -9,6 +15,17 @@
     "delete": "删除",
     "edit": "编辑",
     "back": "返回"
+  },
+  "public": {
+    "title": "面向产品 Web 应用的可靠通用底座",
+    "description": "公开内容、受权工作区、API 访问和实时交互都采用明确的渲染、安全与数据归属边界。",
+    "login": "登录",
+    "workspace": "进入工作区"
+  },
+  "errors": {
+    "notFoundTitle": "页面不存在",
+    "notFoundDescription": "请求的页面不存在或已不可用。",
+    "returnHome": "返回首页"
   },
   "auth": {
     "login": "登录",

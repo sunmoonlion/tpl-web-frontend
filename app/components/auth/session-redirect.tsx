@@ -2,13 +2,16 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { clientEnv } from '@/env/client'
 
 export function SessionRedirect({ locale }: { locale: string }) {
   const router = useRouter()
 
   useEffect(() => {
-    const base = process.env.NEXT_PUBLIC_API_URL ?? '/api'
-    fetch(`${base}/auth/me`, { credentials: 'include' })
+    fetch(`${clientEnv.NEXT_PUBLIC_API_URL}/auth/me`, {
+      credentials: 'include',
+      cache: 'no-store',
+    })
       .then((r) => {
         if (!r.ok) return null
         return r.json() as Promise<{ user: unknown }>
