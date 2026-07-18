@@ -151,6 +151,7 @@ build_image() {
     $RUNTIME_CMD build "${build_network_args[@]}" -f "$SCRIPT_DIR/$DOCKERFILE" \
         -t "${TPL_SSR_IMAGE}:${TPL_SSR_TAG}" \
         --build-arg REGISTRY="${REGISTRY}" \
+        --build-arg NODE_IMAGE="${REGISTRY}/node:24.18.0-alpine@sha256:4ba75f835bb8802193e4c114572113d4b26f95f6f094f4b5229d2a77773e0afc" \
         --build-arg NPM_CONFIG_REGISTRY="${NPM_CONFIG_REGISTRY:-https://registry.npmmirror.com}" \
         .
     
@@ -219,8 +220,7 @@ push_image() {
 main() {
     log_info "Tpl App SSR 镜像构建脚本启动"
     log_info "推送配置: PUSH_IMAGES_AFTER_BUILD=${PUSH_IMAGES_AFTER_BUILD}"
-    ensure_base_image "node:20.18.0"
-    ensure_base_image "node:20.18.0-alpine"
+    ensure_base_image "node:24.18.0-alpine"
     build_image
 }
 

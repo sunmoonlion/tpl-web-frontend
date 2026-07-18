@@ -12,7 +12,7 @@ SSR 镜像构建采用直接使用源代码的方式：
 ## 文件说明
 
 ### Dockerfile
-SSR 镜像构建文件，基于 `node:20.18` 镜像，使用多阶段构建：
+SSR 镜像构建文件，基于精确的 `node:24.18.0` LTS 镜像，使用多阶段构建：
 - `build` 阶段：构建 Next.js 应用（`pnpm build`）
 - `run-dev` 阶段：开发环境运行
 - `run-start` 阶段：生产环境运行
@@ -118,4 +118,3 @@ sudo nerdctl login harbor.sunmoonai.com:30443
 3. **构建上下文**：构建时在项目根目录执行，使用 `-f mybuild/Dockerfile` 指定 Dockerfile，Dockerfile 中的 `COPY app/` 会从构建上下文（项目根目录）复制
 4. **版本控制**：`mybuild/` 目录应该在版本控制中，这样可以确保构建配置和代码同步
 5. **镜像分离**：镜像构建和部署已完全分离，构建使用 `build-image.sh`，部署使用 `deploy-tpl-frontend.sh`
-

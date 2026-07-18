@@ -8,13 +8,16 @@ next-intl、Tailwind/shadcn UI、同源 `/api` 接入和自托管 standalone 构
 ## 本地开发
 
 ```bash
-# .nvmrc is the canonical reproducible version; Node 20.18–24.x is accepted
-# for local development, while Docker/CI remain pinned to Node 20.18.0.
-nvm use 20.18.0
+# .nvmrc/.node-version and Docker/CI share the same release baseline.
+nvm use 24.18.0
 corepack enable
 corepack pnpm install --frozen-lockfile
 corepack pnpm dev
 ```
+
+发布基线为 Node `24.18.0` LTS 与 pnpm `10.24.x`；`package.json` 只接受
+`>=24.18.0 <25`。版本冻结服务于单次发布可复现，不代表永久停留在该版本；模板按
+季度检查 LTS 生命周期，并在 EOL 前至少六个月启动下一次受控升级。
 
 首次使用时，从 `.env.example` 生成未提交的 `.env.local`。浏览器 API 固定为
 同源 `/api`；`APP_ORIGIN`、`WEB_BACKEND_INTERNAL_URL`、`DEPLOYMENT_ID`
