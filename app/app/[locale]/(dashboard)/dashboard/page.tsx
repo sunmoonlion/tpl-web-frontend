@@ -1,8 +1,7 @@
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
-import { clientEnv } from '@/env/client'
-
-const logoutUrl = `${clientEnv.NEXT_PUBLIC_API_URL}/auth/logout`
+import { LogoutButton } from '@/components/auth/logout-button'
+import { requireBrowserSession } from '@/lib/server/auth-session'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -19,7 +18,9 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+  const session = await requireBrowserSession(locale)
   const t = await getTranslations('auth')
   const tNav = await getTranslations('nav')
 
@@ -27,16 +28,21 @@ export default async function DashboardPage() {
     <div className="bg-background min-h-screen" data-route-class="authenticated-workspace">
       <header className="flex items-center justify-between border-b px-6 py-3">
         <span className="text-muted-foreground text-sm font-medium">{tNav('dashboard')}</span>
-        <a
-          href={logoutUrl}
-          className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 hover:underline"
-        >
-          {t('logout')}
-        </a>
+        <LogoutButton
+          csrfToken={session.csrf_token}
+          locale={locale}
+          label={t('logout')}
+          errorLabel={t('logoutFailed')}
+        />
       </header>
       <main className="p-8">
         <h1 className="text-2xl font-semibold tracking-tight">{tNav('dashboard')}</h1>
         <p className="text-muted-foreground mt-2">{t('dashboardWelcome')}</p>
+        <p className="text-muted-foreground mt-1 text-sm">
+          {t('signedInAs', {
+            name: session.user.display_name ?? session.user.email ?? session.user.actor_id,
+          })}
+        </p>
       </main>
     </div>
   )

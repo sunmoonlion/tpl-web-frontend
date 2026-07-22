@@ -31,6 +31,7 @@
     "login": "Login",
     "signup": "Sign up",
     "logout": "Logout",
+    "logoutFailed": "Sign out failed. Please try again.",
     "username": "Username",
     "password": "Password",
     "loginTitle": "Welcome back",
@@ -41,6 +42,7 @@
     "errorNoCode": "No authorization code was returned. Click Login again from this page.",
     "errorOAuthGeneric": "Authorization was denied or cancelled. Please try again.",
     "dashboardWelcome": "Welcome to tpl.",
+    "signedInAs": "Signed in as {name}",
     "signupSuccessHint": "Sign-up succeeded. Click Login below to enter this app."
   },
   "nav": {

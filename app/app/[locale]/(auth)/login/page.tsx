@@ -1,12 +1,11 @@
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
+import { redirect } from 'next/navigation'
 import { buttonVariants } from '@/components/ui/button'
-import { SessionRedirect } from '@/components/auth/session-redirect'
 import { clientEnv } from '@/env/client'
+import { getBrowserSession } from '@/lib/server/auth-session'
 import { cn } from '@/lib/utils'
 
-const loginUrl = `${clientEnv.NEXT_PUBLIC_API_URL}/auth/login`
-const signupUrl = `${clientEnv.NEXT_PUBLIC_API_URL}/auth/signup`
 const continueUrl = `${clientEnv.NEXT_PUBLIC_API_URL}/auth/continue`
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -25,8 +24,7 @@ type Props = {
   params: Promise<{ locale: string }>
   searchParams: Promise<{
     error?: string
-    error_hint?: string
-    error_description?: string
+    reason?: string
     /** 由 BFF /api/auth/after-signup 或 Casdoor 跳转带回 */
     registered?: string
   }>
@@ -36,15 +34,15 @@ export default async function LoginPage({ params, searchParams }: Props) {
   const { locale } = await params
   const t = await getTranslations('auth')
   const paramsQ = await searchParams
+  const session = await getBrowserSession()
+  if (session) redirect(`/${locale}/dashboard`)
+  const returnTo = `/${locale}/dashboard`
+  const loginUrl = `${clientEnv.NEXT_PUBLIC_API_URL}/auth/login?return_to=${encodeURIComponent(returnTo)}`
+  const signupUrl = `${clientEnv.NEXT_PUBLIC_API_URL}/auth/signup?return_to=${encodeURIComponent(returnTo)}`
 
   let errorText: string | null = null
   if (paramsQ.error === 'auth_failed') {
     errorText = t('errorAuthFailed')
-  } else if (paramsQ.error === 'no_code') {
-    errorText = t('errorNoCode')
-  } else if (paramsQ.error === 'oauth_error') {
-    const parts = [paramsQ.error_hint, paramsQ.error_description].filter(Boolean)
-    errorText = parts.length ? parts.join(' — ') : t('errorOAuthGeneric')
   }
 
   const signupOk = paramsQ.registered === '1' || paramsQ.registered === 'true'
@@ -54,7 +52,6 @@ export default async function LoginPage({ params, searchParams }: Props) {
       className="bg-background flex min-h-screen items-center justify-center"
       data-route-class="login"
     >
-      <SessionRedirect locale={locale} />
       <div className="w-full max-w-sm space-y-6 rounded-xl border p-8 shadow-sm">
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-semibold tracking-tight">{t('loginTitle')}</h1>

@@ -13,12 +13,35 @@ test('public route is rendered and indexable', async ({ page }) => {
   await expect(page.locator('meta[name="robots"]')).toHaveCount(0)
 })
 
-test('workspace route is dynamic and explicitly noindex', async ({ page }) => {
+test('anonymous workspace request is redirected by the SSR authorization boundary', async ({
+  page,
+}) => {
+  await page.goto('/en/dashboard')
+
+  await expect(page).toHaveURL(/\/en\/login$/)
+  await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible()
+})
+
+test('workspace route renders only after the paired backend validates its opaque session', async ({
+  context,
+  page,
+}) => {
+  await context.addCookies([
+    {
+      name: 'sunmoonai_info_web_sid',
+      value: 'e2e-session',
+      domain: '127.0.0.1',
+      path: '/',
+      httpOnly: true,
+      sameSite: 'Lax',
+    },
+  ])
   const response = await page.goto('/en/dashboard')
 
   expect(response?.status()).toBe(200)
   expect(response?.headers()['cache-control']).toContain('no-store')
   await expect(page.locator('[data-route-class="authenticated-workspace"]')).toBeVisible()
+  await expect(page.getByText('Signed in as Paired E2E User')).toBeVisible()
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
 })
 

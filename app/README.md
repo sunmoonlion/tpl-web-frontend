@@ -20,7 +20,7 @@ corepack pnpm dev
 季度检查 LTS 生命周期，并在 EOL 前至少六个月启动下一次受控升级。
 
 首次使用时，从 `.env.example` 生成未提交的 `.env.local`。浏览器 API 固定为
-同源 `/api`；`APP_ORIGIN`、`WEB_BACKEND_INTERNAL_URL`、`DEPLOYMENT_ID`
+同源 `/api`；`DEPLOYMENT_ENV`、`AUTH_APP`、`APP_ORIGIN`、`WEB_BACKEND_INTERNAL_URL`、`DEPLOYMENT_ID`
 属于 server-only 运行时契约。不要把 Casdoor、Redis、服务 token 或其他凭据
 放进 `NEXT_PUBLIC_*` 或前端仓库。
 
@@ -44,8 +44,12 @@ Ingress 或受控 Node server 对外提供服务。发布前必须同时记录�
 - `proxy.ts` 只负责 locale negotiation 等请求前路由工作，不是授权边界。
 - `env/client.ts` 只允许同源 API path；`instrumentation.ts` 在生产 Node server
   启动时验证 server-only 环境。
-- 公共首页可预渲染；工作区明确 dynamic/no-store/noindex。P0-008B/B2 将加入
-  服务端 session check 和 server-only DAL/DTO，完成前模板不具备生产身份资格。
+- 公共首页可预渲染；工作区明确 dynamic/no-store/noindex。受权页面只通过
+  `lib/server/auth-session.ts` 的 server-only DAL 把请求 cookie 和 correlation ID 转给
+  配对 backend，并严格解析 Browser Session DTO v1；401 服务端跳转登录，其他上游或
+  契约错误 fail closed。浏览器 logout 只使用同源 POST+CSRF，不保存第二份 auth 状态。
+- B2 通过只证明身份内核、DAL/DTO 和受控配对 fixture；真实 Casdoor、双 Pod、滚动与
+  回滚资格仍由 B4 验收。
 - BFF、session/cookie、SSE cursor/reconcile、Citation DTO 和缓存归属以
   ADR-001/002/004/005/014 为准，不在模板中伪造业务成功。
 - 迁移到 Info、Knowledge、Research 时必须原地替换现有仓库，保留领域页面并按
