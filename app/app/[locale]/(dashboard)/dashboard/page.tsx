@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { LogoutButton } from '@/components/auth/logout-button'
+import { ReferenceWorkspace } from '@/components/platform/reference-workspace'
+import { serverEnv } from '@/env/server'
 import { requireBrowserSession } from '@/lib/server/auth-session'
 
 export const dynamic = 'force-dynamic'
@@ -43,6 +45,12 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
             name: session.user.display_name ?? session.user.email ?? session.user.actor_id,
           })}
         </p>
+        {serverEnv.REFERENCE_UI_ENABLED ? (
+          <ReferenceWorkspace
+            runId="00000000-0000-5000-8000-000000000001"
+            csrfToken={session.csrf_token}
+          />
+        ) : null}
       </main>
     </div>
   )

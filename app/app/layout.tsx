@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { defaultLocale } from '@/i18n'
+import { PlatformProviders } from '@/components/platform/providers'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -15,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang={defaultLocale} className="h-full antialiased" suppressHydrationWarning>
       <body className="min-h-full flex flex-col">
-        {children}
+        <PlatformProviders>{children}</PlatformProviders>
       </body>
     </html>
   )

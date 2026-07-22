@@ -49,5 +49,36 @@
     "home": "首页",
     "dashboard": "控制台",
     "settings": "设置"
+  },
+  "interaction": {
+    "loading": "正在加载参考运行…",
+    "loadFailed": "实时工作区加载失败",
+    "loadFailedHint": "配对后端不可用或返回了不兼容的契约。",
+    "referenceLabel": "契约参考面",
+    "answer": "回答时间线",
+    "answerPending": "正在等待流式输出…",
+    "citations": "引用",
+    "citationsPending": "暂时没有已验证引用。",
+    "citationFallback": "来源 {index}",
+    "confirmAction": "确认并继续",
+    "submitting": "正在提交…",
+    "actionFailed": "操作未被接受，请对账后重试。",
+    "responseLabel": "回复内容",
+    "responsePlaceholder": "请输入请求的回复内容",
+    "status": {
+      "queued": "排队中",
+      "running": "运行中",
+      "waiting_for_input": "等待输入",
+      "succeeded": "已完成",
+      "failed": "失败",
+      "cancelled": "已取消"
+    },
+    "stream": {
+      "connecting": "正在连接",
+      "open": "实时连接",
+      "reconciling": "正在对账",
+      "offline": "正在重连",
+      "closed": "已结束"
+    }
   }
 }

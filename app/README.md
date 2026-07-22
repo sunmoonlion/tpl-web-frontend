@@ -1,7 +1,8 @@
 # tpl-web-frontend
 
-SunmoonAI 的 Next Web 通用模板。它与 `tpl-web-backend`（Nest Web BFF）组成
-一个发布和验收单元，提供 App Router、明确的 public/authenticated 渲染边界、
+SunmoonAI 的 Next Web 通用模板。B2~B4 期间它与当前 `tpl-web-backend`（Nest Web BFF）
+组成发布和验收单元；B5/B6 后默认配对同契约 FastAPI BFF，Nest 作为可选 profile。
+模板提供 App Router、明确的 public/authenticated 渲染边界、
 next-intl、Tailwind/shadcn UI、同源 `/api` 接入和自托管 standalone 构建。
 本仓库不包含 Info、Knowledge 或 Research 的领域页面和 DTO。
 
@@ -50,6 +51,9 @@ Ingress 或受控 Node server 对外提供服务。发布前必须同时记录�
   契约错误 fail closed。浏览器 logout 只使用同源 POST+CSRF，不保存第二份 auth 状态。
 - B2 通过只证明身份内核、DAL/DTO 和受控配对 fixture；真实 Casdoor、双 Pod、滚动与
   回滚资格仍由 B4 验收。
+- B3 增加实现无关的 Run snapshot、typed query、SSE cursor/去重/断档对账、HITL action、
+  browser-safe Citation 和稳定 error adapter。参考 UI 仅在
+  `REFERENCE_UI_ENABLED=true` 时启用；生产默认关闭，fixture 不代表真实 Run 成功。
 - BFF、session/cookie、SSE cursor/reconcile、Citation DTO 和缓存归属以
   ADR-001/002/004/005/014 为准，不在模板中伪造业务成功。
 - 迁移到 Info、Knowledge、Research 时必须原地替换现有仓库，保留领域页面并按

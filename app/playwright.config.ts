@@ -1,9 +1,10 @@
 import { defineConfig, devices } from '@playwright/test'
 
-const port = Number(process.env.PORT ?? 3008)
+const gatewayPort = Number(process.env.PORT ?? 3009)
+const nextPort = Number(process.env.NEXT_PORT ?? 3008)
 const externalBaseURL = process.env.PLAYWRIGHT_BASE_URL
-const baseURL = externalBaseURL ?? `http://127.0.0.1:${port}`
-const mockBackendPort = Number(process.env.MOCK_WEB_BACKEND_PORT ?? 18080)
+const baseURL = externalBaseURL ?? `http://127.0.0.1:${gatewayPort}`
+const pairBackendPort = Number(process.env.PAIR_FIXTURE_PORT ?? 18080)
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -22,27 +23,40 @@ export default defineConfig({
     ? undefined
     : [
         {
-          command: 'node scripts/mock-web-backend.mjs',
-          url: `http://127.0.0.1:${mockBackendPort}/health`,
+          command: 'pnpm --dir ../../tpl-web-backend/app start:pair-fixture',
+          url: `http://127.0.0.1:${pairBackendPort}/api/health`,
           reuseExistingServer: !process.env.CI,
           timeout: 30_000,
           env: {
-            MOCK_WEB_BACKEND_PORT: String(mockBackendPort),
+            PAIR_FIXTURE_PORT: String(pairBackendPort),
+            PAIR_ORIGIN: baseURL,
           },
         },
         {
           command: 'pnpm prepare:standalone && node .next/standalone/server.js',
-          url: baseURL,
+          url: `http://127.0.0.1:${nextPort}`,
           reuseExistingServer: !process.env.CI,
           timeout: 60_000,
           env: {
             DEPLOYMENT_ENV: 'test',
             AUTH_APP: 'info',
             APP_ORIGIN: baseURL,
-            WEB_BACKEND_INTERNAL_URL: `http://127.0.0.1:${mockBackendPort}`,
-            DEPLOYMENT_ID: 'p0-008b-b2-e2e',
+            WEB_BACKEND_INTERNAL_URL: `http://127.0.0.1:${pairBackendPort}`,
+            DEPLOYMENT_ID: 'p0-008b-b3-e2e',
+            REFERENCE_UI_ENABLED: 'true',
             HOSTNAME: '127.0.0.1',
-            PORT: String(port),
+            PORT: String(nextPort),
+          },
+        },
+        {
+          command: 'node scripts/pair-gateway.mjs',
+          url: `${baseURL}/__gateway_health`,
+          reuseExistingServer: !process.env.CI,
+          timeout: 30_000,
+          env: {
+            PAIR_GATEWAY_PORT: String(gatewayPort),
+            NEXT_UPSTREAM_PORT: String(nextPort),
+            PAIR_FIXTURE_PORT: String(pairBackendPort),
           },
         },
       ],

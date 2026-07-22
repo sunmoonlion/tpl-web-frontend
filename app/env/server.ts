@@ -10,6 +10,7 @@ export const serverEnv = parseServerEnv(
     APP_ORIGIN: process.env.APP_ORIGIN,
     WEB_BACKEND_INTERNAL_URL: process.env.WEB_BACKEND_INTERNAL_URL,
     DEPLOYMENT_ID: process.env.DEPLOYMENT_ID,
+    REFERENCE_UI_ENABLED: process.env.REFERENCE_UI_ENABLED,
   },
   {
     phase: process.env.NEXT_PHASE,

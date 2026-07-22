@@ -20,6 +20,10 @@ const serverEnvSchema = z.object({
   APP_ORIGIN: httpOrigin.optional(),
   WEB_BACKEND_INTERNAL_URL: httpOrigin.optional(),
   DEPLOYMENT_ID: z.string().trim().min(1).optional(),
+  REFERENCE_UI_ENABLED: z
+    .enum(['true', 'false'])
+    .transform((value) => value === 'true')
+    .optional(),
 })
 
 export type ServerEnv = z.infer<typeof serverEnvSchema> & {
@@ -28,6 +32,7 @@ export type ServerEnv = z.infer<typeof serverEnvSchema> & {
   APP_ORIGIN: string
   WEB_BACKEND_INTERNAL_URL: string
   DEPLOYMENT_ID: string
+  REFERENCE_UI_ENABLED: boolean
 }
 
 type ParseServerEnvOptions = {
@@ -49,6 +54,7 @@ export function parseServerEnv(
     parsed.WEB_BACKEND_INTERNAL_URL ?? (allowLocalDefaults ? 'http://127.0.0.1:8000' : undefined)
   const deploymentId = parsed.DEPLOYMENT_ID ?? (allowLocalDefaults ? 'local' : undefined)
   const authApp = parsed.AUTH_APP ?? (allowLocalDefaults ? 'info' : undefined)
+  const referenceUiEnabled = parsed.REFERENCE_UI_ENABLED ?? false
 
   if (!deploymentEnv || !appOrigin || !webBackendInternalUrl || !deploymentId || !authApp) {
     throw new Error(
@@ -72,5 +78,6 @@ export function parseServerEnv(
     APP_ORIGIN: appOrigin,
     WEB_BACKEND_INTERNAL_URL: webBackendInternalUrl,
     DEPLOYMENT_ID: deploymentId,
+    REFERENCE_UI_ENABLED: referenceUiEnabled,
   }
 }
