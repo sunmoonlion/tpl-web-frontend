@@ -124,7 +124,7 @@ CMD [".next/standalone/server.js"]
 FROM ${NODE_IMAGE} AS run-minimal
 
 RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
+    adduser --system --uid 1001 --ingroup nodejs nextjs
 
 # ============================================================================
 # 代理配置（可选，与 build 阶段相同）
