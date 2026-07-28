@@ -27,6 +27,12 @@ export const citationSchema = z
     source_href: z.string().max(128).regex(/^\/api\/citations\/[0-9a-fA-F-]{36}\/source$/),
   })
   .strict()
+  .refine(
+    (citation) =>
+      citation.source_href.toLowerCase() ===
+      `/api/citations/${citation.evidence_id}/source`.toLowerCase(),
+    'source_href must identify evidence_id',
+  )
 
 export const requiredActionSchema = z
   .object({
@@ -50,6 +56,12 @@ export const runSnapshotSchema = z
     updated_at: dateTime,
   })
   .strict()
+  .refine(
+    (snapshot) =>
+      new Set(snapshot.citations.map((citation) => citation.evidence_id)).size ===
+      snapshot.citations.length,
+    'citation evidence_id values must be unique',
+  )
 
 const eventBase = {
   contract_version: z.literal(1),
