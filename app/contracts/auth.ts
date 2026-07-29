@@ -9,7 +9,10 @@ const principalSchema = z
     email: z.email().max(320).nullable().optional(),
     roles: uniqueClaimList(),
     scopes: uniqueClaimList(),
-    expires_at: z.iso.datetime(),
+    // Python's datetime.isoformat() emits a valid RFC 3339 `+00:00` offset.
+    // Accept explicit offsets as well as `Z`; the contract must not depend on
+    // which UTC spelling the paired FastAPI backend chooses.
+    expires_at: z.iso.datetime({ offset: true }),
   })
   .strict()
 

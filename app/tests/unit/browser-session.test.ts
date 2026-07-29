@@ -18,6 +18,30 @@ const validSession = {
 } as const
 
 describe('loadBrowserSession', () => {
+  it('accepts the RFC 3339 UTC offset emitted by the FastAPI backend', async () => {
+    const fetchImpl = vi.fn(async () =>
+      Response.json({
+        ...validSession,
+        user: {
+          ...validSession.user,
+          expires_at: '2027-07-22T06:00:00+00:00',
+        },
+      }),
+    )
+
+    await expect(
+      loadBrowserSession({
+        backendUrl: 'http://tpl-web-backend:8000',
+        cookieHeader: 'sunmoonai_info_web_sid=opaque-session',
+        correlationId: 'correlation-1234',
+        expectedApp: 'info',
+        fetchImpl: fetchImpl as typeof fetch,
+      }),
+    ).resolves.toMatchObject({
+      user: { expires_at: '2027-07-22T06:00:00+00:00' },
+    })
+  })
+
   it('forwards only the cookie and correlation context and accepts the exact safe DTO', async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()
