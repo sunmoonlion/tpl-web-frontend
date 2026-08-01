@@ -30,6 +30,10 @@ describe('client environment', () => {
 })
 
 describe('server environment', () => {
+  it('uses the template identity by default outside production', () => {
+    expect(parseServerEnv({ NODE_ENV: 'development' }).AUTH_APP).toBe('tpl')
+  })
+
   it('fails closed when production runtime values are missing', () => {
     expect(() =>
       parseServerEnv({
@@ -51,7 +55,7 @@ describe('server environment', () => {
       ),
     ).toMatchObject({
       APP_ORIGIN: 'http://localhost:3000',
-      WEB_BACKEND_INTERNAL_URL: 'http://127.0.0.1:8000',
+      BACKEND_INTERNAL_URL: 'http://127.0.0.1:8000',
       DEPLOYMENT_ID: 'local',
       DEPLOYMENT_ENV: 'development',
     })
@@ -64,8 +68,8 @@ describe('server environment', () => {
         DEPLOYMENT_ENV: 'test',
         AUTH_APP: 'info',
         APP_ORIGIN: 'http://127.0.0.1:3008',
-        WEB_BACKEND_INTERNAL_URL: 'http://127.0.0.1:18080',
-        DEPLOYMENT_ID: 'p0-008b-b2-e2e',
+        BACKEND_INTERNAL_URL: 'http://127.0.0.1:18080',
+        DEPLOYMENT_ID: 'arch-v2-r2-web-e2e',
       }),
     ).toMatchObject({
       DEPLOYMENT_ENV: 'test',
@@ -80,8 +84,8 @@ describe('server environment', () => {
         DEPLOYMENT_ENV: 'test',
         AUTH_APP: 'info',
         APP_ORIGIN: 'http://web.example.test',
-        WEB_BACKEND_INTERNAL_URL: 'http://127.0.0.1:18080',
-        DEPLOYMENT_ID: 'p0-008b-b2-e2e',
+        BACKEND_INTERNAL_URL: 'http://127.0.0.1:18080',
+        DEPLOYMENT_ID: 'arch-v2-r2-web-e2e',
       }),
     ).toThrow(/loopback host/)
   })
@@ -93,13 +97,13 @@ describe('server environment', () => {
         DEPLOYMENT_ENV: 'production',
         AUTH_APP: 'info',
         APP_ORIGIN: 'https://tpl.sunmoonai.com',
-        WEB_BACKEND_INTERNAL_URL: 'http://tpl-web-backend:8000',
+        BACKEND_INTERNAL_URL: 'http://tpl-backend:8000',
         DEPLOYMENT_ID: 'release-42',
       }),
     ).toMatchObject({
       APP_ORIGIN: 'https://tpl.sunmoonai.com',
       DEPLOYMENT_ENV: 'production',
-      WEB_BACKEND_INTERNAL_URL: 'http://tpl-web-backend:8000',
+      BACKEND_INTERNAL_URL: 'http://tpl-backend:8000',
       DEPLOYMENT_ID: 'release-42',
     })
   })
@@ -108,9 +112,9 @@ describe('server environment', () => {
     ['http application origin', { APP_ORIGIN: 'http://tpl.sunmoonai.com' }],
     [
       'backend URL with credentials',
-      { WEB_BACKEND_INTERNAL_URL: 'http://user:password@tpl-web-backend:8000' },
+      { BACKEND_INTERNAL_URL: 'http://user:password@tpl-backend:8000' },
     ],
-    ['backend URL with a path', { WEB_BACKEND_INTERNAL_URL: 'http://tpl-web-backend:8000/api' }],
+    ['backend URL with a path', { BACKEND_INTERNAL_URL: 'http://tpl-backend:8000/api' }],
   ])('rejects unsafe production server routing: %s', (_label, override) => {
     expect(() =>
       parseServerEnv({
@@ -118,7 +122,7 @@ describe('server environment', () => {
         DEPLOYMENT_ENV: 'production',
         AUTH_APP: 'info',
         APP_ORIGIN: 'https://tpl.sunmoonai.com',
-        WEB_BACKEND_INTERNAL_URL: 'http://tpl-web-backend:8000',
+        BACKEND_INTERNAL_URL: 'http://tpl-backend:8000',
         DEPLOYMENT_ID: 'release-42',
         ...override,
       }),
