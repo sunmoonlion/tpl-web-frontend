@@ -1,0 +1,14 @@
+{
+  "id": "default",
+  "title": "登录之后",
+  "description": "模板自带的页面。模板没有业务接口，所以这里只有登录与跨应用跳转的替身。",
+  "signed_in": true,
+  "user": { "display_name": "样例用户" },
+  "pages": [
+    { "title": "公开首页", "path": "/zh-CN" },
+    { "title": "登录页", "path": "/zh-CN/login" },
+    { "title": "仪表盘", "path": "/zh-CN/dashboard" }
+  ],
+  "responses": [],
+  "streams": []
+}
