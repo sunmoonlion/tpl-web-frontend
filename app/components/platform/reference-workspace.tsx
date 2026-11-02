@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import type { RunAction } from '@/contracts/interaction'
+import { useRecoveredSession } from '@/components/auth/session-boundary'
 import { useRunProjection } from '@/lib/interaction/use-run-projection'
 
 type ReferenceWorkspaceProps = {
@@ -12,9 +13,10 @@ type ReferenceWorkspaceProps = {
 
 export function ReferenceWorkspace({ runId, csrfToken }: ReferenceWorkspaceProps) {
   const t = useTranslations('interaction')
+  const recovered = useRecoveredSession()
   const { snapshot, streamState, queryError, isLoading, action } = useRunProjection(
     runId,
-    csrfToken,
+    recovered?.csrf_token ?? csrfToken,
   )
 
   if (isLoading) {
@@ -53,7 +55,7 @@ export function ReferenceWorkspace({ runId, csrfToken }: ReferenceWorkspaceProps
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <article className="bg-card rounded-xl border p-5 shadow-sm">
           <h3 className="font-medium">{t('answer')}</h3>
-          <p className="text-muted-foreground mt-3 min-h-20 whitespace-pre-wrap text-sm">
+          <p className="text-muted-foreground mt-3 min-h-20 text-sm whitespace-pre-wrap">
             {snapshot.summary || t('answerPending')}
           </p>
           {snapshot.required_action ? (
@@ -73,7 +75,10 @@ export function ReferenceWorkspace({ runId, csrfToken }: ReferenceWorkspaceProps
             <ol className="mt-3 space-y-3">
               {snapshot.citations.map((citation, index) => (
                 <li key={citation.evidence_id} className="text-sm">
-                  <a className="font-medium underline underline-offset-4" href={citation.source_href}>
+                  <a
+                    className="font-medium underline underline-offset-4"
+                    href={citation.source_href}
+                  >
                     {citation.title ?? t('citationFallback', { index: index + 1 })}
                   </a>
                   <blockquote className="text-muted-foreground mt-1 line-clamp-4">
