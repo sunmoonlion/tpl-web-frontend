@@ -64,3 +64,20 @@ Ingress 或受控 Node server 对外提供服务。发布前必须同时记录�
 - Next.js App Router 与自托管文档：<https://nextjs.org/docs>
 - 当前架构与契约入口：`k8s/docs/project-guide/`
 - 旧设计与迁移证据：按 `k8s/sunmoonai/docs/legacy-backlog/verification-index.md` 的固定 Git 版本查询，不作为当前实施基线。
+
+## 浏览器登录失效恢复
+
+受保护页面在 QueryClientProvider 内挂载 `SessionBoundary`，初始身份来自服务端
+BrowserSession。应用 HTTP 适配器使用 `sessionFetch`，读完成功响应后执行
+`assertSessionResponse`，丢弃旧会话迟到的响应。401 关闭本标签页请求入口；403
+不注销身份。代理第三方凭据的接口须先通过权威会话接口核对，不能将第三方 401
+当作浏览器失效。跨应用链接客户端和 Run 客户端均接入该入口。
+
+失效时受保护子树隐藏但保留内存输入，轮询不再发网请求、Run SSE 关闭；在新标签页
+登录后，原页面通过 `/api/auth/web/me` 只读核验。相同 actor/app 更新 CSRF 并重取
+查询，不重放确认、派单或其他 mutation；账号变化清除旧缓存与输入并重新打开页面。
+恢复状态不写 localStorage/sessionStorage，不调整 Web/Admin 会话寿命。
+`RequestFailure` 将认证、权限、404、契约与服务故障分别呈现。
+
+验证：`tests/unit/session-recovery.test.ts`、`tests/component/session-boundary.test.tsx`，
+以及既有 HTTP/交互测试。工作台的业务适配、SSE 和非空资料契约测试在实例维护。
