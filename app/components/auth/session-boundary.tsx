@@ -2,10 +2,18 @@
 
 import { useQueryClient } from '@tanstack/react-query'
 import { useTranslations } from 'next-intl'
-import { createContext, useContext, useEffect, useState, useSyncExternalStore } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  useCallback,
+  useRef,
+} from 'react'
 
 import { browserSessionSchema, type BrowserSession } from '@/contracts/auth'
-import { loginPath, nextPath } from '@/lib/auth/next-path'
+import { nextPath } from '@/lib/auth/next-path'
 import { sessionRecovery } from '@/lib/auth/session-recovery'
 import { leaveTo } from '@/lib/leave-to'
 
@@ -32,6 +40,7 @@ export function SessionBoundary({
   )
   const [recovered, setRecovered] = useState<BrowserSession | null>(null)
   const [busy, setBusy] = useState(false)
+  const checking = useRef(false)
   const [failed, setFailed] = useState(false)
   const [changedAccount, setChangedAccount] = useState(false)
   const [returnTo, setReturnTo] = useState(`/${locale}/dashboard`)
@@ -48,39 +57,70 @@ export function SessionBoundary({
     void client.cancelQueries()
   }, [expired, client, locale])
 
-  async function resume() {
-    if (busy) return
-    setBusy(true)
-    setFailed(false)
-    try {
-      // Explicit read-only check bypasses the expired-session request gate.
-      const response = await fetch('/api/auth/web/me', {
-        credentials: 'same-origin',
-        cache: 'no-store',
-        redirect: 'manual',
-        headers: { Accept: 'application/json' },
-        signal: AbortSignal.timeout(10_000),
-      })
-      if (!response.ok) throw new Error('session_check_failed')
-      const current = browserSessionSchema.parse(await response.json())
-      if (
-        current.user.app !== session.user.app ||
-        current.user.actor_id !== session.user.actor_id
-      ) {
-        setChangedAccount(true)
-        client.clear()
-        return
+  const resume = useCallback(
+    async (manual = true) => {
+      if (checking.current || changedAccount) return
+      checking.current = true
+      setBusy(true)
+      setFailed(false)
+      try {
+        // Explicit read-only check bypasses the expired-session request gate.
+        const response = await fetch('/api/auth/web/me', {
+          credentials: 'same-origin',
+          cache: 'no-store',
+          redirect: 'manual',
+          headers: { Accept: 'application/json' },
+          signal: AbortSignal.timeout(10_000),
+        })
+        if (!response.ok) throw new Error('session_check_failed')
+        const current = browserSessionSchema.parse(await response.json())
+        if (
+          current.user.app !== session.user.app ||
+          current.user.actor_id !== session.user.actor_id
+        ) {
+          setChangedAccount(true)
+          return
+        }
+        if (Date.parse(current.user.expires_at) <= Date.now()) throw new Error('expired')
+        // A live browser session may still lack a usable delegated token. Require
+        // a new OIDC session, including on a second recovery in the same tab.
+        if (current.csrf_token === (recovered ?? session).csrf_token) {
+          throw new Error('reauthentication_not_completed')
+        }
+        setRecovered(current)
+        // Publish the fresh CSRF context before refetching. Failed mutations are
+        // never resumed: only GET queries reset, after the next React commit.
+      } catch {
+        if (manual) setFailed(true)
+      } finally {
+        checking.current = false
+        setBusy(false)
       }
-      if (Date.parse(current.user.expires_at) <= Date.now()) throw new Error('expired')
-      setRecovered(current)
-      // Publish the fresh CSRF context before refetching. Failed mutations are
-      // never resumed: only GET queries reset, after the next React commit.
-    } catch {
-      setFailed(true)
-    } finally {
-      setBusy(false)
+    },
+    [changedAccount, recovered, session],
+  )
+
+  // An account switch unmounts the old subtree before clearing its cache;
+  // otherwise still-mounted observers can immediately recreate private queries.
+  useEffect(() => {
+    if (changedAccount) {
+      void client.cancelQueries().then(() => client.clear())
     }
-  }
+  }, [changedAccount, client])
+
+  // Returning from the SSO tab should resume automatically, preserving drafts.
+  useEffect(() => {
+    if (!expired || changedAccount) return
+    const check = () => {
+      if (document.visibilityState === 'visible') void resume(false)
+    }
+    window.addEventListener('focus', check)
+    document.addEventListener('visibilitychange', check)
+    return () => {
+      window.removeEventListener('focus', check)
+      document.removeEventListener('visibilitychange', check)
+    }
+  }, [expired, changedAccount, resume])
 
   useEffect(() => {
     if (!recovered) return
@@ -117,7 +157,7 @@ export function SessionBoundary({
             ) : (
               <div className="flex flex-wrap gap-4">
                 <a
-                  href={loginPath(locale, returnTo)}
+                  href={`/api/auth/web/login?return_to=${encodeURIComponent(returnTo)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="underline"
